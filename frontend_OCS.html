@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <h1>Login</h1>
+    <input type="text" id="userId" placeholder="User ID"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+    <button onclick="login()">Login</button>
+    <div id="data"></div>
+
+    <script>
+        async function login() {
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+            const passwordHash = CryptoJS.MD5(password).toString();
+
+            const loginResponse = await fetch('/api/login', {  // Relative URL
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, passwordHash })
+            });
+
+            const loginData = await loginResponse.json();
+
+            if (loginData.success) {
+                const dataResponse = await fetch('/api/data', {  // Relative URL
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: loginData.user.userid, role: loginData.user.role })
+                });
+
+                const dataResult = await dataResponse.json();
+                displayData(dataResult.data);
+            } else {
+                alert(loginData.message);
+            }
+        }
+
+        function displayData(data) {
+            const dataDiv = document.getElementById('data');
+            dataDiv.innerHTML = JSON.stringify(data, null, 2); // Pretty print JSON
+        }
+    </script>
+</body>
+</html>
